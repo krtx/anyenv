@@ -140,5 +140,22 @@ for env in $(anyenv-envs); do
     ;;
   esac
 
-  echo "$(${ENV_ROOT}/bin/${env} init - ${no_rehash_arg}${shell})"
+  cat <<EOS
+  function ${env}
+    set command \$argv[1]
+    set -e argv[1]
+
+    if [ -z \$${ENV_ROOT_VALUE} ]
+      set -x ${ENV_ROOT_VALUE} \"${ENV_ROOT}\"
+      set -x PATH \$PATH \"${ENV_ROOT}/bin\"
+
+      $(${ENV_ROOT}/bin/${env} init - ${no_rehash_arg}${shell})
+    end
+
+    command ${env} "\$command" \$argv
+  end
+
+EOS
+
+  # echo "$(${ENV_ROOT}/bin/${env} init - ${no_rehash_arg}${shell})"
 done
