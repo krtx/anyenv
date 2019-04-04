@@ -127,35 +127,19 @@ for env in $(anyenv-envs); do
   ENV_ROOT_VALUE=$(echo ${env}_ROOT | tr "[a-z]" "[A-Z]")
   ENV_ROOT="${ANYENV_ROOT}/envs/${env}"
 
-  case "$shell" in
-  fish )
-    echo "set -x ${ENV_ROOT_VALUE} \"${ENV_ROOT}\""
-    export ${ENV_ROOT_VALUE}="${ENV_ROOT}"
-    echo "set -x PATH \$PATH \"${ENV_ROOT}/bin\""
-    ;;
-  * )
-    echo "export ${ENV_ROOT_VALUE}=\"${ENV_ROOT}\""
-    export ${ENV_ROOT_VALUE}="${ENV_ROOT}"
-    echo "export PATH=\"${ENV_ROOT}/bin:\$PATH\""
-    ;;
-  esac
-
   cat <<EOS
   function ${env}
     set command \$argv[1]
     set -e argv[1]
 
     if [ -z \$${ENV_ROOT_VALUE} ]
-      set -x ${ENV_ROOT_VALUE} \"${ENV_ROOT}\"
-      set -x PATH \$PATH \"${ENV_ROOT}/bin\"
+      set -gx ${ENV_ROOT_VALUE} "${ENV_ROOT}"
+      set -x PATH \$PATH "${ENV_ROOT}/bin"
 
-      $(${ENV_ROOT}/bin/${env} init - ${no_rehash_arg}${shell})
+      status --is-interactive; and source (${ENV_ROOT}/bin/${env} init - ${no_rehash_arg}${shell}|psub)
     end
 
     command ${env} "\$command" \$argv
   end
-
 EOS
-
-  # echo "$(${ENV_ROOT}/bin/${env} init - ${no_rehash_arg}${shell})"
 done
